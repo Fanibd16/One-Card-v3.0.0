@@ -1,0 +1,42 @@
+
+
+GET http://localhost:5000/students
+###
+GET http://localhost:5000/schedules
+###
+GET http://localhost:5000/generate-id-cards
+###
+
+GET http://localhost:4000/api/auth/register
+###
+
+POST http://localhost:4000/api/auth/register
+
+###
+http://172.22.80.1:4000/api/auth/register
+Content-Type: application/json
+
+{
+    "fullName" : "ababe kebede",
+    "emailOrPhone" : "abew@gmail.com",
+    "password" : "000"
+}
+
+
+###
+GET  http://192.168.137.25:4000/pharmacy/
+
+###
+GET http://localhost:4000/pharmacy/
+
+###
+PATCH   http://localhost:4000/pharmacy
+Content-Type: application/json
+
+{
+    "name" : "hh",
+    "location" : "0",
+    "medicinquantity" : "15"
+}
+
+

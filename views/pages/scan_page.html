@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+
+    <!-- [Favicon] -->
+    <link rel="icon" href="https://ableproadmin.com/tailwindassets/images/favicon.svg" type="image/x-icon">
+
+    <!-- [Font and Icons CSS] -->
+    <link rel="stylesheet" href="../assets/fonts/inter/inter.css" id="main-font-link">
+    <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css">
+    <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css">
+    <link rel="stylesheet" href="../assets/fonts/feather.css">
+    <link rel="stylesheet" href="../assets/fonts/fontawesome.css">
+    <link rel="stylesheet" href="../assets/fonts/material.css">
+    <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link">
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: #081f35 url(../assets/images/bg/bg_banner.png);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        #barcodeInput {
+            width: 100%;
+            height: 100%;
+            font-size: 48px; 
+            border: none;
+            outline: none;
+            text-align: center;
+            background: transparent; /* Make the background of the input transparent */
+            color: transparent; /* Hide the text color */
+            caret-color: transparent; /* Hide the cursor */
+        }
+
+        .arrow {
+            width: 400px;
+            height: 400px;
+            background: url(../assets/images/bg/scanner-removebg-preview.png) no-repeat center;
+            background-size: contain;
+            animation: bounce 2s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            width: 400px;
+            color: black;
+            z-index: 10;
+        }
+
+        .modal.active {
+            display: block; /* Show modal when active */
+        }
+
+        .modal-header {
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .modal-body {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .modal-footer {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="arrow"></div>
+    <input type="text" id="barcodeInput" autofocus />
+
+    <!-- Modal for student details -->
+    <div id="studentModal" class="modal">
+        <div class="modal-header">
+            <h5 class="modal-title">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        <div class="modal-body">
+           
+            <div class="mb-3">
+                <img id="studentPhoto" class="rounded-full"  alt="User image" width="100">
+            </div>
+            <div class="mb-3">
+                <label id="studentName">Name: -</label>
+            </div>
+            <div class="mb-3">
+                <label id="studentDepartment">Department: -</label>
+            </div>
+            <div id="errorIcon" class="hidden">
+                <i class="ti ti-x-circle" style="font-size: 3rem; color: red;"></i>
+                <p style="color: red;">Barcode not found</p>
+            </div>
+        </div>
+        <!-- <div class="modal-footer"> -->
+            <!-- <button onclick="closeModal()">Close</button> -->
+        <!-- </div> -->
+    </div>
+
+    <script>
+        const errorSound = new Audio('/Sounds/error-01.mp3'); // Replace with the path to your error sound
+        const barcodeInput = document.getElementById('barcodeInput');
+        const studentModal = document.getElementById('studentModal');
+        const studentPhoto = document.getElementById('studentPhoto');
+        const studentName = document.getElementById('studentName');
+        const studentDepartment = document.getElementById('studentDepartment');
+        const errorIcon = document.getElementById('errorIcon');
+
+        function closeModal() {
+            studentModal.classList.remove('active');
+            barcodeInput.focus();
+        }
+
+        async function fetchStudentData(barcode) {
+            try {
+                const response = await fetch(`http://localhost:5000/students?barCode=${barcode}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.find(student => student.barCode === barcode) || null;
+                } else {
+                    console.error('API Error:', response.statusText);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Network Error:', error);
+                return null;
+            }
+        }
+
+        barcodeInput.addEventListener('input', async () => {
+            const barcode = barcodeInput.value.trim();
+            if (!barcode) return;
+
+            const student = await fetchStudentData(barcode);
+            if (student) {
+                studentPhoto.src = `http://localhost:5000/${student.photoPath}`;
+                studentName.textContent = `Name: ${student.name}`;
+                studentDepartment.textContent = `Department: ${student.department}`;
+                errorIcon.classList.add('hidden');
+            } else {
+                studentPhoto.src = '/assets/images/user/avatar-1.jpg';
+                studentName.textContent = 'Name: -';
+                studentDepartment.textContent = 'Department: -';
+                errorIcon.classList.remove('hidden');
+                errorSound.play();
+            }
+
+            studentModal.classList.add('active');
+            barcodeInput.value = ''; // Clear input for next scan
+        });
+    </script>
+</body>
+</html>
